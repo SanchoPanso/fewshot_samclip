@@ -8,15 +8,19 @@ from fewshot_samclip.utils import show_anns
 
 def main():
     detector = FewShotDetector()
+    
+    # Set query images
     query_images = [
         Image.open("images/query_image_1.jpg"), 
         Image.open("images/query_image_2.jpg"),
     ]
     detector.set_queries(query_images)
 
+    # Do detection
     image = Image.open("images/target_image.jpg")
     selected_masks = detector(image, 0.85)
     
+    # Draw and save results
     plt.figure(figsize=(20,20))
     plt.imshow(image)
     show_anns(selected_masks)
