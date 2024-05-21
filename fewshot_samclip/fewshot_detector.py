@@ -27,7 +27,7 @@ class FewShotDetector:
         # Placeholder for query images
         self.query_embeddings = None
 
-    def set_queries(self, query_images: list):
+    def set_queries(self, query_images: List[Image.Image]):
         # Preprocess and get CLIP embeddings for query images
         self.query_embeddings = []
         
@@ -40,9 +40,8 @@ class FewShotDetector:
         
         self.query_embeddings = torch.stack(self.query_embeddings)
 
-    def __call__(self, image: Image, threshold: float = 0.5):
+    def __call__(self, image: Image.Image, threshold: float = 0.5) -> List[dict]:
         # Generate masks using SAM
-        # TODO: change image type
         masks = self.generate_masks(np.array(image))
         
         # Filter masks based on similarities
@@ -50,17 +49,18 @@ class FewShotDetector:
         
         return selected_masks
 
-    def generate_masks(self, image: np.ndarray):
+    def generate_masks(self, image: np.ndarray) -> List[dict]:
         # Generate masks using SAM
         masks = self.mask_generator.generate(image)
         return masks
     
-    def filter_masks(self, image, masks, threshold):
+    def filter_masks(self, image: Image.Image, masks: List[dict], threshold: float) -> List[dict]:
         # Extract masked regions and get CLIP embeddings
         mask_images = []
         for mask in masks:
             bbox = mask['bbox']
-            mask_image = image.crop((bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]))
+            x, y, w, h = bbox
+            mask_image = image.crop((x, y, x + w, y + h))
             mask_images.append(mask_image)
 
         mask_embeddings = []
@@ -81,14 +81,10 @@ class FewShotDetector:
         aggregated_similarities = torch.stack(similarities).mean(dim=0)
         
         # Filter masks based on similarity scores
-        selected_masks = [masks[i] for i, score in enumerate(aggregated_similarities) if score > threshold]
+        selected_masks = []
+        for i, score in enumerate(aggregated_similarities):
+            if score > threshold:
+                selected_masks.append(masks[i])
+
         return selected_masks
     
-# Example usage:
-# detector = FewShotDetector(sam_model_type="sam_vit_h", sam_checkpoint="sam_vit_h_4b8939.pth")
-# query_images = [Image.open("path_to_query_image1.jpg"), Image.open("path_to_query_image2.jpg")]
-# detector.set_queries(query_images)
-# image = Image.open("path_to_target_image.jpg")
-# selected_masks = detector(image)
-# for mask in selected_masks:
-#     print(mask)
