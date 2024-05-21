@@ -18,7 +18,7 @@ class FewShotDetector:
         
         # Initialize SAM
         self.sam = sam_model_registry[sam_model_type](checkpoint=sam_checkpoint)
-        self.sam.to(device=device)
+        self.sam = self.sam.to(device)
         self.mask_generator = SamAutomaticMaskGenerator(self.sam)
         
         # Initialize CLIP
@@ -43,8 +43,19 @@ class FewShotDetector:
     def __call__(self, image: Image, threshold: float = 0.5):
         # Generate masks using SAM
         # TODO: change image type
-        masks = self.mask_generator.generate(np.array(image))
+        masks = self.generate_masks(np.array(image))
         
+        # Filter masks based on similarities
+        selected_masks = self.filter_masks(image, masks, threshold)
+        
+        return selected_masks
+
+    def generate_masks(self, image: np.ndarray):
+        # Generate masks using SAM
+        masks = self.mask_generator.generate(image)
+        return masks
+    
+    def filter_masks(self, image, masks, threshold):
         # Extract masked regions and get CLIP embeddings
         mask_images = []
         for mask in masks:
@@ -71,9 +82,8 @@ class FewShotDetector:
         
         # Filter masks based on similarity scores
         selected_masks = [masks[i] for i, score in enumerate(aggregated_similarities) if score > threshold]
-        
         return selected_masks
-
+    
 # Example usage:
 # detector = FewShotDetector(sam_model_type="sam_vit_h", sam_checkpoint="sam_vit_h_4b8939.pth")
 # query_images = [Image.open("path_to_query_image1.jpg"), Image.open("path_to_query_image2.jpg")]
