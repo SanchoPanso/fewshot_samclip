@@ -77,8 +77,8 @@ class FewShotDetector:
             similarity = torch.nn.functional.cosine_similarity(query_embedding, mask_embeddings)
             similarities.append(similarity)
         
-        # Aggregate similarities (e.g., mean similarity across all queries)
-        aggregated_similarities = torch.stack(similarities).mean(dim=0)
+        # Aggregate similarities (e.g., max similarity across all queries)
+        aggregated_similarities = torch.stack(similarities).max(dim=0)[0]
         
         # Filter masks based on similarity scores
         selected_masks = []
