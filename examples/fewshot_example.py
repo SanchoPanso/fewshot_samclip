@@ -7,8 +7,11 @@ from fewshot_samclip.utils import show_anns
 
 
 def main():
-    detector = FewShotDetector()
-    
+    detector = FewShotDetector(
+        sam_checkpoint="/opt/program/weights/sam_vit_b_01ec64.pth",
+        sam_model_type="vit_b",
+        clip_model_name="/opt/program/weights/ViT-B-32.pt",
+    )    
     # Set query images
     query_images = [
         Image.open("images/query_image_1.jpg"), 
