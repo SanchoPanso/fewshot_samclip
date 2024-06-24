@@ -9,7 +9,7 @@ readme = "README.md"
 python = ">3.9, <4"
 segment-anything = {git = "https://github.com/facebookresearch/segment-anything.git"}
 clip = {git = "https://github.com/openai/CLIP.git"}
-matplotlib = "^3.9.0"
+matplotlib = "^3.7.5"
 
 
 [build-system]
